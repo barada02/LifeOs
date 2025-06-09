@@ -1,0 +1,305 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums for type safety
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  WAITING
+  COMPLETED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum ProjectStatus {
+  ONGOING
+  COMPLETED
+  ARCHIVED
+  UPCOMING
+}
+
+enum ProjectCategory {
+  HACKATHON
+  PERSONAL
+  ACADEMIC
+  FREELANCE
+  OTHER
+}
+
+enum ResourceType {
+  LINK
+  FILE
+  IDEA
+  NOTE
+}
+
+enum HealthMetricType {
+  WEIGHT
+  SLEEP
+  STEPS
+  MOOD
+  ENERGY
+}
+
+// Core Entities
+
+model User {
+  id            Int       @id @default(autoincrement())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  projects      Project[]
+  tasks         Task[]
+  habits        Habit[]
+  goals         Goal[]
+  healthMetrics HealthMetric[]
+}
+
+model Project {
+  id            Int             @id @default(autoincrement())
+  title         String
+  description   String?
+  status        ProjectStatus   @default(ONGOING)
+  category      ProjectCategory @default(PERSONAL)
+  startDate     DateTime?
+  deadline      DateTime?
+  progress      Float           @default(0) // 0-100
+  userId        Int
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  
+  tasks         Task[]
+  milestones    Milestone[]
+  resources     Resource[]
+  notes         ProjectNote[]
+  
+  @@index([status])
+  @@index([userId])
+  @@index([category])
+}
+
+model Task {
+  id            Int           @id @default(autoincrement())
+  title         String
+  description   String?
+  status        TaskStatus    @default(TODO)
+  priority      TaskPriority  @default(MEDIUM)
+  dueDate       DateTime?
+  completedAt   DateTime?
+  estimatedHours Float?
+  actualHours   Float?
+  
+  // Progress tracking
+  progress      Float         @default(0) // 0-100 percentage
+  isSubtask     Boolean       @default(false) // Explicit flag for subtasks
+  
+  // Relations
+  userId        Int
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId     Int?
+  project       Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  
+  // Self-relation for subtasks
+  parentTaskId  Int?
+  parentTask    Task?         @relation("SubTasks", fields: [parentTaskId], references: [id], onDelete: SetNull)
+  subTasks      Task[]        @relation("SubTasks")
+  
+  // Milestone relation - tasks remain even if milestone is deleted
+  milestoneId   Int?
+  milestone     Milestone?    @relation(fields: [milestoneId], references: [id], onDelete: SetNull)
+  
+  // Skill relation for learning tasks
+  isLearningTask Boolean      @default(false)
+  skillId       Int?
+  skill         Skill?        @relation(fields: [skillId], references: [id], onDelete: SetNull)
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  @@index([status])
+  @@index([dueDate])
+  @@index([userId])
+  @@index([projectId])
+  @@index([milestoneId])
+  @@index([parentTaskId])
+}
+
+model Milestone {
+  id            Int       @id @default(autoincrement())
+  title         String
+  description   String?
+  dueDate       DateTime?
+  completedAt   DateTime?
+  progress      Float     @default(0) // 0-100, calculated from associated tasks
+  projectId     Int
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  tasks         Task[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Resource {
+  id            Int           @id @default(autoincrement())
+  title         String
+  type          ResourceType
+  content       String
+  projectId     Int
+  project       Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  @@index([projectId])
+}
+
+model ProjectNote {
+  id            Int       @id @default(autoincrement())
+  title         String
+  content       String
+  projectId     Int
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// Life Management Entities
+
+model Habit {
+  id            Int       @id @default(autoincrement())
+  title         String
+  description   String?
+  category      String?   // health, productivity, learning, etc.
+  frequency     String    // daily, weekdays, weekly, custom
+  timeOfDay     String?   // morning, afternoon, evening
+  active        Boolean   @default(true)
+  userId        Int
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  streaks       HabitStreak[]
+  completions   HabitCompletion[]
+  
+  @@index([userId])
+  @@index([category])
+  @@index([active])
+}
+
+model HabitCompletion {
+  id            Int       @id @default(autoincrement())
+  completed     Boolean   @default(true)
+  completedAt   DateTime  @default(now())
+  notes         String?
+  habitId       Int
+  habit         Habit     @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  
+  @@unique([habitId, completedAt])
+  @@index([completedAt])
+  @@index([habitId])
+}
+
+model HabitStreak {
+  id            Int       @id @default(autoincrement())
+  startDate     DateTime
+  endDate       DateTime?
+  currentStreak Int       @default(1)
+  habitId       Int
+  habit         Habit     @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model HealthMetric {
+  id            Int              @id @default(autoincrement())
+  type          HealthMetricType
+  value         Float
+  unit          String?          // kg, hours, steps, score (1-10)
+  notes         String?
+  recordedAt    DateTime         @default(now())
+  userId        Int
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([type])
+  @@index([recordedAt])
+}
+
+// Goals & Learning
+
+model Goal {
+  id            Int       @id @default(autoincrement())
+  title         String
+  description   String?
+  category      String?   // career, personal, education, health
+  targetDate    DateTime?
+  completedAt   DateTime?
+  progress      Float     @default(0) // 0-100
+  userId        Int
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  subGoals      SubGoal[]
+  skills        Skill[]
+  
+  @@index([userId])
+  @@index([category])
+  @@index([completedAt])
+}
+
+model SubGoal {
+  id            Int       @id @default(autoincrement())
+  title         String
+  completed     Boolean   @default(false)
+  completedAt   DateTime?
+  goalId        Int
+  goal          Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Skill {
+  id            Int       @id @default(autoincrement())
+  name          String
+  description   String?
+  proficiency   Float     @default(0) // 0-100
+  goalId        Int?
+  goal          Goal?     @relation(fields: [goalId], references: [id], onDelete: SetNull)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  
+  tasks         Task[]
+  learningResources LearningResource[]
+}
+
+model LearningResource {
+  id            Int       @id @default(autoincrement())
+  title         String
+  type          String    // course, book, video, article, website
+  url           String?
+  notes         String?
+  completed     Boolean   @default(false)
+  completedAt   DateTime?
+  skillId       Int
+  skill         Skill     @relation(fields: [skillId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
