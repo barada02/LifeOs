@@ -90,6 +90,18 @@
   line-height: 1.5;
 }
 
+.demo-buttons {
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.demo-buttons .header-button {
+  text-decoration: none;
+  display: inline-block;
+}
+
 .features-grid {
   display: grid;
   grid-template-columns: 1fr;

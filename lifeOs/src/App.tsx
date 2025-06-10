@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import OrbitalDemoPage from './experimental/orbital-navigation/OrbitalDemoPage';
+import CircularMenuDemo from './experimental/circular-menu/CircularMenuDemo';
 import './App.css';
 
 function App() {
@@ -17,6 +19,8 @@ function App() {
             </ProtectedRoute>
           } 
         />
+        <Route path="/orbital-demo" element={<OrbitalDemoPage />} />
+        <Route path="/circular-menu-demo" element={<CircularMenuDemo />} />
       </Routes>
     </Router>
   );

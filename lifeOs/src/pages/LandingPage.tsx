@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import AuthForm from '../components/AuthForm';
 import './LandingPage.css';
 
@@ -38,10 +38,17 @@ const LandingPage: React.FC = () => {
       <main className="main-content">
         {/* Left Column - Marketing Content */}
         <div className="marketing-content">
-          <h2 className="marketing-title">Organize Your Life with LifeOS</h2>
-          <p className="marketing-subtitle">
+          <h2 className="marketing-title">Organize Your Life with LifeOS</h2>          <p className="marketing-subtitle">
             Your comprehensive life management system for organizing projects, tasks, habits, and goals. Take control of your time and boost your productivity.
           </p>
+          <div className="demo-buttons">
+            <Link to="/orbital-demo" className="header-button">
+              Try Orbital UI Demo
+            </Link>
+            <Link to="/circular-menu-demo" className="header-button">
+              Try Circular Menu Demo
+            </Link>
+          </div>
           <div className="features-grid">
             <div className="feature-card">
               <h3 className="feature-title">Project Management</h3>

@@ -1,0 +1,76 @@
+/* OrbitalDemoPage.css */
+.orbital-demo-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.demo-header {
+  background-color: #1e40af;
+  color: white;
+  padding: 1rem 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.demo-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.demo-header-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.demo-header-button {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.demo-header-button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.demo-container {
+  flex: 1;
+}
+
+.demo-instructions {
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  padding: 2rem;
+  margin-top: auto;
+}
+
+.demo-instructions h2 {
+  font-size: 1.25rem;
+  color: #1f2937;
+  margin: 0 0 1rem 0;
+}
+
+.demo-instructions ul {
+  margin: 0 0 1.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.demo-instructions li {
+  margin-bottom: 0.5rem;
+  color: #4b5563;
+}
+
+.demo-instructions p {
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  max-width: 42rem;
+}
