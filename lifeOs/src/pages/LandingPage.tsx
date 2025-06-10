@@ -1,27 +1,81 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AuthForm from '../components/AuthForm';
+import './LandingPage.css';
 
 const LandingPage: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const token = localStorage.getItem('token');
+    if (token) {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
 
   const toggleForm = () => {
     setIsLogin(!isLogin);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-4">
-      <div className="text-center mb-10">
-        <h1 className="text-5xl font-bold text-blue-900 mb-3">LifeOS</h1>
-        <p className="text-gray-600 text-xl max-w-lg">
-          Your comprehensive life management system for organizing projects, tasks, habits, and goals.
-        </p>
-      </div>
+    <div className="landing-page">
+      {/* Header */}
+      <header className="landing-header">
+        <div className="header-container">
+          <h1 className="header-logo">LifeOS</h1>
+          <button 
+            onClick={() => setIsLogin(true)}
+            className="header-button"
+          >
+            Sign In
+          </button>
+        </div>
+      </header>
       
-      <AuthForm isLogin={isLogin} toggleForm={toggleForm} />
+      {/* Main Content */}
+      <main className="main-content">
+        {/* Left Column - Marketing Content */}
+        <div className="marketing-content">
+          <h2 className="marketing-title">Organize Your Life with LifeOS</h2>
+          <p className="marketing-subtitle">
+            Your comprehensive life management system for organizing projects, tasks, habits, and goals. Take control of your time and boost your productivity.
+          </p>
+          <div className="features-grid">
+            <div className="feature-card">
+              <h3 className="feature-title">Project Management</h3>
+              <p className="feature-description">Organize your work and personal projects in one place.</p>
+            </div>
+            <div className="feature-card">
+              <h3 className="feature-title">Task Tracking</h3>
+              <p className="feature-description">Never forget important tasks with our intuitive system.</p>
+            </div>
+            <div className="feature-card">
+              <h3 className="feature-title">Habit Building</h3>
+              <p className="feature-description">Build consistent habits that lead to long-term success.</p>
+            </div>
+            <div className="feature-card">
+              <h3 className="feature-title">Goal Setting</h3>
+              <p className="feature-description">Set and achieve your short and long-term life goals.</p>
+            </div>
+          </div>
+        </div>
+        
+        {/* Right Column - Auth Form */}
+        <div className="auth-container">
+          <AuthForm isLogin={isLogin} toggleForm={toggleForm} />
+        </div>
+      </main>
       
-      <div className="mt-16 text-center text-gray-500 text-sm">
-        <p>© {new Date().getFullYear()} LifeOS. All rights reserved.</p>
-      </div>
+      {/* Footer */}
+      <footer className="landing-footer">
+        <div className="footer-container">
+          <p className="footer-text">
+            © {new Date().getFullYear()} LifeOS. All rights reserved.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 };

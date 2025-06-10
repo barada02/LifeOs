@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import './Dashboard.css';
 
 interface User {
   id: number;
@@ -67,12 +68,12 @@ const Dashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block w-8 h-8 border-4 rounded-full border-blue-600 border-t-transparent animate-spin" role="status">
+      <div className="loading-container">
+        <div className="loading-content">
+          <div className="loading-spinner" role="status">
             <span className="visually-hidden">Loading...</span>
           </div>
-          <p className="mt-2 text-gray-600">Loading your dashboard...</p>
+          <p className="loading-text">Loading your dashboard...</p>
         </div>
       </div>
     );
@@ -80,20 +81,20 @@ const Dashboard: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Error</h2>
-          <p className="text-gray-700 mb-6">{error}</p>
-          <div className="flex space-x-4">
+      <div className="error-container">
+        <div className="error-box">
+          <h2 className="error-title">Error</h2>
+          <p className="error-message">{error}</p>
+          <div className="error-actions">
             <button 
               onClick={handleRetry}
-              className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md"
+              className="retry-button"
             >
               Retry
             </button>
             <button
               onClick={handleLogout}
-              className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md"
+              className="logout-button"
             >
               Log Out
             </button>
@@ -101,45 +102,110 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
     );
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="spinner-border animate-spin inline-block w-8 h-8 border-4 rounded-full text-blue-600" role="status">
-            <span className="visually-hidden">Loading...</span>
+  }  return (
+    <div className="dashboard-container">
+      {/* Header/Navbar */}
+      <header className="dashboard-header">
+        <div className="header-container">
+          <div className="header-content">
+            <div className="header-logo">
+              <h1 className="header-logo-text">LifeOS</h1>
+            </div>
+            <div className="header-user-section">
+              <span className="header-username">Hello, {user?.name}</span>
+              <button
+                onClick={handleLogout}
+                className="header-logout-button"
+              >
+                Logout
+              </button>
+            </div>
           </div>
-          <p className="mt-2">Loading...</p>
         </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="p-6">
-        <div className="flex justify-end">
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-md"
-          >
-            Logout
-          </button>
+      </header>
+      
+      {/* Main Content */}
+      <main className="main-content">
+        <div className="dashboard-panel">
+          <div className="panel-header">
+            <h2 className="panel-title">Welcome to Your Dashboard</h2>
+            <p className="panel-subtitle">
+              Your personal life management system is ready for you to start organizing your life.
+            </p>
+          </div>
+          
+          {/* Dashboard Cards */}
+          <div className="cards-container">
+            {/* Tasks Card */}
+            <div className="dashboard-card">
+              <div className="card-header">
+                <h3 className="card-title">Tasks</h3>
+                <span className="card-badge">Coming Soon</span>
+              </div>
+              <p className="card-description">Organize and track your daily tasks and to-dos.</p>
+              <button disabled className="card-button">
+                Add New Task →
+              </button>
+            </div>
+            
+            {/* Projects Card */}
+            <div className="dashboard-card">
+              <div className="card-header">
+                <h3 className="card-title">Projects</h3>
+                <span className="card-badge">Coming Soon</span>
+              </div>
+              <p className="card-description">Manage your projects and track their progress.</p>
+              <button disabled className="card-button">
+                Create Project →
+              </button>
+            </div>
+            
+            {/* Habits Card */}
+            <div className="dashboard-card">
+              <div className="card-header">
+                <h3 className="card-title">Habits</h3>
+                <span className="card-badge">Coming Soon</span>
+              </div>
+              <p className="card-description">Build and track your daily habits and routines.</p>
+              <button disabled className="card-button">
+                Start Habit →
+              </button>
+            </div>
+          </div>
         </div>
         
-        <div className="mt-8 text-center">
-          <h1 className="text-4xl font-bold text-gray-800 mb-2">
-            Welcome to LifeOS, {user?.name}!
-          </h1>
-          <p className="text-gray-600 mb-8">
-            Your personal life management system is ready.
-          </p>
-          <p className="text-gray-500 text-lg">
-            This dashboard is currently blank. Future updates will include project management, habit tracking, and visualization features.
+        {/* Account Info */}
+        <div className="dashboard-panel account-section">
+          <div className="panel-header">
+            <h3 className="panel-title">Account Information</h3>
+          </div>
+          <div className="account-grid">
+            <div>
+              <p className="account-item-label">Name</p>
+              <p className="account-item-value">{user?.name}</p>
+            </div>
+            <div>
+              <p className="account-item-label">Email</p>
+              <p className="account-item-value">{user?.email}</p>
+            </div>
+            <div>
+              <p className="account-item-label">Member Since</p>
+              <p className="account-item-value">
+                {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : ''}
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
+      
+      {/* Footer */}
+      <footer className="dashboard-footer">
+        <div className="footer-container">
+          <p className="footer-text">
+            © {new Date().getFullYear()} LifeOS. All rights reserved.
           </p>
         </div>
-      </div>
+      </footer>
     </div>
   );
 };
