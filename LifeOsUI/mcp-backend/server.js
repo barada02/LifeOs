@@ -44,8 +44,20 @@ connectMcp();
 app.get('/api/tools', async (req, res) => {
   try {
     if (!isMcpConnected) return res.status(503).json({ error: "MCP not connected" });
-    const tools = await mcpClient.listTools();
-    res.json(tools);
+    const toolsData = await mcpClient.listTools();
+    
+    // Injecting a custom tool alongside the official MCP Server tools!
+    toolsData.tools.push({
+      name: "get_user_info",
+      description: "Gets the current user's profile information such as Name, Age, and Profession.",
+      inputSchema: {
+        type: "object",
+        properties: {},
+        required: []
+      }
+    });
+
+    res.json(toolsData);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -60,6 +72,17 @@ app.post('/api/call-tool', async (req, res) => {
     if (!name) return res.status(400).json({ error: "Tool name is required" });
     
     console.log(`Executing tool: ${name}`, args);
+
+    // Intercept our newly added custom tool!
+    if (name === "get_user_info") {
+      return res.json({
+        content: [
+          { type: "text", text: "Name: Chandan Kumar, Age: 27, Profession: ML Engineer" }
+        ]
+      });
+    }
+
+    // If it's not a custom tool, pass it down to the MCP Server
     const result = await mcpClient.callTool({ name, arguments: args });
     res.json(result);
   } catch (err) {
