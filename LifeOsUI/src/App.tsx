@@ -13,8 +13,8 @@ interface Message {
 // Ensure you run `VITE_OPENAI_API_KEY` in .env!
 const apiKey = import.meta.env.VITE_OPENAI_API_KEY || ''
 const baseURL = import.meta.env.VITE_OPENAI_BASE_URL || 'https://api.openai.com/v1'
-
-const openai = new OpenAI({
+const model= import.meta.env.VITE_MODEL
+const client = new OpenAI({
   apiKey: apiKey || 'dummy-key',
   baseURL: baseURL,
   dangerouslyAllowBrowser: true,
@@ -73,8 +73,8 @@ function App() {
       }
 
       // 2. Call OpenAI / Custom LLM Endpoint directly from Client
-      const response = await openai.chat.completions.create({
-        model: 'gpt-4o', // Adjust model if using LMStudio/OpenRouter etc.
+      const response = await client.chat.completions.create({
+        model: model, // Adjust model if using LMStudio/OpenRouter etc.
         messages: conversation as any, // Cast due to possible Tool calls
         tools: toolsConfig && toolsConfig.length > 0 ? toolsConfig : undefined,
       })
@@ -86,6 +86,8 @@ function App() {
       // 3. Handle Tool calls dynamically
       if (assistantMsg.tool_calls && assistantMsg.tool_calls.length > 0) {
          for (const tc of assistantMsg.tool_calls) {
+            if (tc.type !== 'function') continue;
+            
             let toolText = ""
             try {
                const args = JSON.parse(tc.function.arguments)
@@ -116,8 +118,8 @@ function App() {
          }
          
          // 4. Send the tool results back up to OpenAI to form the final user-facing answer
-         const finalResponse = await openai.chat.completions.create({
-            model: 'gpt-4o',
+         const finalResponse = await client.chat.completions.create({
+            model: model,
             messages: newConversation as any,
          })
          
