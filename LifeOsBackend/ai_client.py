@@ -12,8 +12,11 @@ load_dotenv()
 
 class AIClient:
     def __init__(self, async_mode: bool = True):
-        self.openai_client = AsyncOpenAI()
-        self.model = os.getenv("OPENAI_MODEL", "gpt-4o")
+        self.openai_client = AsyncOpenAI(
+            api_key=os.getenv("AI_API_KEY"),
+            base_url=os.getenv("AI_BASE_URL")
+        )
+        self.model = os.getenv("AI_MODEL", "gpt-4o")
         self.messages = []
         self.system_prompt = (
             "You are a helpful assistant hooked up to an external database. "
