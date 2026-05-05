@@ -1,224 +1,120 @@
-import { useState, useRef, useEffect } from 'react'
-import OpenAI from 'openai'
-import './index.css'
-
-interface Message {
-  role: 'user' | 'assistant' | 'system' | 'tool'
-  content: string
-  name?: string
-  tool_call_id?: string
-  tool_calls?: any[]
-}
-
-// Ensure you run `VITE_OPENAI_API_KEY` in .env!
-const apiKey = import.meta.env.VITE_OPENAI_API_KEY || ''
-const baseURL = import.meta.env.VITE_OPENAI_BASE_URL || 'https://api.openai.com/v1'
-const model= import.meta.env.VITE_MODEL
-const client = new OpenAI({
-  apiKey: apiKey || 'dummy-key',
-  baseURL: baseURL,
-  dangerouslyAllowBrowser: true,
-})
+import { useState } from 'react'
+import reactLogo from './assets/react.svg'
+import viteLogo from './assets/vite.svg'
+import heroImg from './assets/hero.png'
+import './App.css'
 
 function App() {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState('')
-  const [isTyping, setIsTyping] = useState(false)
-  const [mcpConfigError, setMcpConfigError] = useState('')
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages, isTyping])
-
-  useEffect(() => {
-    if (!apiKey && baseURL === 'https://api.openai.com/v1') {
-      setMcpConfigError('Notice: Please set VITE_OPENAI_API_KEY and VITE_OPENAI_BASE_URL in LifeOsUI/.env')
-    }
-  }, [])
-
-  const handleSend = async () => {
-    if (!input.trim()) return
-
-    const userMessage: Message = { role: 'user', content: input }
-    const conversation = [...messages, userMessage]
-    setMessages(conversation)
-    setInput('')
-    setIsTyping(true)
-
-    try {
-      // 1. Fetch available MCP tools from our Bridge Server
-      let toolsConfig: any[] | undefined = undefined;
-      try {
-        const toolsRes = await fetch('http://localhost:3001/api/tools')
-        if (toolsRes.ok) {
-           const toolsData = await toolsRes.json()
-           if (toolsData && toolsData.tools) {
-             toolsConfig = toolsData.tools.map((t: any) => ({
-                type: 'function',
-                function: {
-                   name: t.name,
-                   description: t.description || '',
-                   parameters: t.inputSchema || {}
-                }
-             }))
-           }
-        }
-      } catch (err) {
-         console.warn("Could not fetch tools from MCP Bridge. Continuing without tools...", err)
-      }
-
-      // 2. Call OpenAI / Custom LLM Endpoint directly from Client
-      const response = await client.chat.completions.create({
-        model: model, // Adjust model if using LMStudio/OpenRouter etc.
-        messages: conversation as any, // Cast due to possible Tool calls
-        tools: toolsConfig && toolsConfig.length > 0 ? toolsConfig : undefined,
-      })
-
-      const assistantMsg = response.choices[0].message
-      let newConversation = [...conversation, assistantMsg as Message]
-      setMessages([...newConversation])
-
-      // 3. Handle Tool calls dynamically
-      if (assistantMsg.tool_calls && assistantMsg.tool_calls.length > 0) {
-         for (const tc of assistantMsg.tool_calls) {
-            if (tc.type !== 'function') continue;
-            
-            let toolText = ""
-            try {
-               const args = JSON.parse(tc.function.arguments)
-               const callRes = await fetch('http://localhost:3001/api/call-tool', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ name: tc.function.name, arguments: args })
-               })
-               if (!callRes.ok) throw new Error("MCP Tool Bridge execution failed")
-               
-               const resultData = await callRes.json()
-               if (resultData.content && resultData.content.length > 0) {
-                  toolText = resultData.content.map((c: any) => c.text).join('\n')
-               } else {
-                  toolText = "Success (No output returned)"
-               }
-            } catch (err: any) {
-               toolText = `Error running tool: ${err.message}`
-            }
-
-            // Append the tool result for the LLM
-            newConversation.push({
-               role: 'tool',
-               tool_call_id: tc.id,
-               name: tc.function.name,
-               content: toolText
-            })
-         }
-         
-         // 4. Send the tool results back up to OpenAI to form the final user-facing answer
-         const finalResponse = await client.chat.completions.create({
-            model: model,
-            messages: newConversation as any,
-         })
-         
-         setMessages([...newConversation, finalResponse.choices[0].message as Message])
-      }
-      
-    } catch (error: any) {
-      console.error(error)
-      setMessages([...conversation, { role: 'assistant', content: `API Error: ${error.message}` }])
-    } finally {
-      setIsTyping(false)
-    }
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
-  }
+  const [count, setCount] = useState(0)
 
   return (
-    <div className="app-container">
-      <header className="app-header">
-        <div className="header-icon">AI</div>
-        <div className="header-title">
-          <h1>LifeOS Assistant</h1>
-          <p>
-            <span className="status-dot"></span>
-            Client-Side Agent
-          </p>
-          {mcpConfigError && <p style={{color: 'orange', fontSize: '11px'}}>{mcpConfigError}</p>}
+    <>
+      <section id="center">
+        <div className="hero">
+          <img src={heroImg} className="base" width="170" height="179" alt="" />
+          <img src={reactLogo} className="framework" alt="React logo" />
+          <img src={viteLogo} className="vite" alt="Vite logo" />
         </div>
-      </header>
-
-      <div className="chat-container">
-        {messages.length === 0 && (
-          <div className="message assistant" style={{ alignSelf: 'center', opacity: 0.7, marginTop: 'auto', marginBottom: 'auto'}}>
-            <div className="message-content" style={{ background: 'transparent', textAlign: 'center', border: 'none' }}>
-              <h2 style={{ marginBottom: '10px', color: 'var(--text-primary)', fontWeight: '600' }}>Welcome to LifeOS</h2>
-              <p style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-                Your LLM runs on the client. It will fetch tools from the MCP Node Bridge!<br/>
-                Try asking me to <strong>remember something</strong>.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {messages.map((msg, index) => {
-          if (msg.role === 'tool' || msg.tool_calls) return null; // Hide raw tool execution logs in UI for cleanliness
-          return (
-            <div key={index} className={`message ${msg.role}`}>
-              <div className="message-badge">
-                {msg.role === 'user' ? 'You' : 'Assistant'}
-              </div>
-              <div className="message-content">
-                {msg.content}
-              </div>
-            </div>
-          )
-        })}
-        
-        {isTyping && (
-          <div className="message assistant">
-             <div className="message-badge">Assistant is thinking & calling MCP...</div>
-             <div className="message-content">
-                <div className="typing-indicator">
-                  <div className="dot"></div>
-                  <div className="dot"></div>
-                  <div className="dot"></div>
-                </div>
-             </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      <div className="input-container">
-        <input
-          type="text"
-          className="input-box"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyPress}
-          placeholder="Ask me a question..."
-          disabled={isTyping}
-        />
-        <button 
-          className="send-button" 
-          onClick={handleSend}
-          disabled={!input.trim() || isTyping}
+        <div>
+          <h1>Get started</h1>
+          <p>
+            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
+          </p>
+        </div>
+        <button
+          className="counter"
+          onClick={() => setCount((count) => count + 1)}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-          </svg>
+          Count is {count}
         </button>
-      </div>
-    </div>
+      </section>
+
+      <div className="ticks"></div>
+
+      <section id="next-steps">
+        <div id="docs">
+          <svg className="icon" role="presentation" aria-hidden="true">
+            <use href="/icons.svg#documentation-icon"></use>
+          </svg>
+          <h2>Documentation</h2>
+          <p>Your questions, answered</p>
+          <ul>
+            <li>
+              <a href="https://vite.dev/" target="_blank">
+                <img className="logo" src={viteLogo} alt="" />
+                Explore Vite
+              </a>
+            </li>
+            <li>
+              <a href="https://react.dev/" target="_blank">
+                <img className="button-icon" src={reactLogo} alt="" />
+                Learn more
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div id="social">
+          <svg className="icon" role="presentation" aria-hidden="true">
+            <use href="/icons.svg#social-icon"></use>
+          </svg>
+          <h2>Connect with us</h2>
+          <p>Join the Vite community</p>
+          <ul>
+            <li>
+              <a href="https://github.com/vitejs/vite" target="_blank">
+                <svg
+                  className="button-icon"
+                  role="presentation"
+                  aria-hidden="true"
+                >
+                  <use href="/icons.svg#github-icon"></use>
+                </svg>
+                GitHub
+              </a>
+            </li>
+            <li>
+              <a href="https://chat.vite.dev/" target="_blank">
+                <svg
+                  className="button-icon"
+                  role="presentation"
+                  aria-hidden="true"
+                >
+                  <use href="/icons.svg#discord-icon"></use>
+                </svg>
+                Discord
+              </a>
+            </li>
+            <li>
+              <a href="https://x.com/vite_js" target="_blank">
+                <svg
+                  className="button-icon"
+                  role="presentation"
+                  aria-hidden="true"
+                >
+                  <use href="/icons.svg#x-icon"></use>
+                </svg>
+                X.com
+              </a>
+            </li>
+            <li>
+              <a href="https://bsky.app/profile/vite.dev" target="_blank">
+                <svg
+                  className="button-icon"
+                  role="presentation"
+                  aria-hidden="true"
+                >
+                  <use href="/icons.svg#bluesky-icon"></use>
+                </svg>
+                Bluesky
+              </a>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <div className="ticks"></div>
+      <section id="spacer"></section>
+    </>
   )
 }
 

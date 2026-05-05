@@ -1,73 +1,73 @@
-# LifeOS - React + MCP Integration Demo
+# React + TypeScript + Vite
 
-This repository demonstrates how to integrate a React frontend with a Model Context Protocol (MCP) server.
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-Since MCP servers often rely on standard Input/Output (`stdio`) or Node.js features to run properly, they cannot be executed directly inside a web browser. The industry standard approach is to use a **lightweight Node.js Bridge Server**.
+Currently, two official plugins are available:
 
-This project contains two parts:
-1. **The React UI (`src/`)**: A sleek, dark-mode, glassmorphism chat interface.
-2. **The MCP Bridge Backend (`mcp-backend/`)**: An Express server that spawns the MCP server via `stdio` and acts as a middleman using OpenAI.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Prerequisites
-- Node.js installed (v18+)
-- An OpenAI API Key
+## React Compiler
 
----
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-## 🚀 Setup Instructions
+## Expanding the ESLint configuration
 
-### 1. Set Up the Node.js MCP Bridge (Backend)
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-The backend handles the connection to the MCP Server (using the official `@modelcontextprotocol/server-memory` graph agent as a demo) and makes the OpenAI API calls.
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-1. Open your terminal and navigate to the backend folder:
-   ```bash
-   cd mcp-backend
-   ```
-2. Install the backend dependencies:
-   ```bash
-   npm install
-   ```
-3. Create an environment file by renaming the example file:
-   ```bash
-   cp .env.example .env
-   ```
-4. **Important**: Open the `.env` file and replace `your_openai_api_key_here` with your actual OpenAI API Key.
-5. Start the backend Server:
-   ```bash
-   npm start
-   ```
-   *You should see a message saying "Connected to MCP Server (server-memory) successfully."*
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-### 2. Set Up the React App (Frontend)
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
 
-Open a **new terminal tab** (so the backend keeps running) and navigate to the root of your UI project.
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
-1. If you haven't already, install the React dependencies:
-   ```bash
-   npm install
-   ```
-2. Start the Vite development server:
-   ```bash
-   npm run dev
-   ```
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
 
-3. Open your browser to `http://localhost:5173/`. You are now ready to chat!
-
-## 🧪 Testing the Integration
-Once both servers are running:
-1. Open the UI in your browser.
-2. Ask the assistant to remember something! Try typing:
-   > *"Remember that my favorite animal is a Capybara and I am learning React."*
-3. The LLM will use the active MCP Memory server tools to save your data permanently to the knowledge graph.
-4. Later, ask:
-   > *"What is my favorite animal?"*
-5. The LLM will leverage the MCP server tools to search the entity graph and find your answer!
-
-## 🔧 How It Works Under The Hood
-- **React Frontend**: Captures user requests and polls `POST http://localhost:3001/api/chat`.
-- **Node Bridge**: Receives the messages. Calls `mcpClient.listTools()` to get the available MCP tools dynamically.
-- **OpenAI Intercept**: The Node Bridge forwards the user message along with the MCP tools to OpenAI (`gpt-4o`).
-- **Tool Exection**: If OpenAI decides a tool is needed (like reading/writing memory), the Node Bridge invokes `mcpClient.callTool()`, gets the result, and feeds it back to OpenAI to generate the final response for the React app.
-
-Enjoy your stunning LifeOS UI!
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
+```
