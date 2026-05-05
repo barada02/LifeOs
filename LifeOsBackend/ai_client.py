@@ -52,8 +52,12 @@ class AIClient:
             # For a true production system, you'd keep the session open.
             # Here we connect, execute, and disconnect.
             server_path = os.path.join(os.path.dirname(__file__), "mcp_server.py")
+            # Prefer the venv python if available since this is where fastmcp is installed
+            venv_python = os.path.join(os.path.dirname(os.path.dirname(__file__)), "LifeOsBackend", ".venv", "Scripts", "python.exe")
+            exec_path = venv_python if os.path.exists(venv_python) else sys.executable
+            
             server_params = StdioServerParameters(
-                command=sys.executable,
+                command=exec_path,
                 args=[server_path]
             )
             async with stdio_client(server_params) as (read_stream, write_stream):

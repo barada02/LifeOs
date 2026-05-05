@@ -128,4 +128,4 @@ def get_mcp_server():
 
 if __name__ == "__main__":
     # When executed, run the FastMCP server over stdio directly
-    mcp.run(transport='stdio')
+    mcp.run()
