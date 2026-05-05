@@ -3,9 +3,14 @@ from bson import ObjectId
 from datetime import datetime, timezone
 from typing import Optional, List
 import json
-from database import get_database
+from database import get_database, connect_to_mongo
 
 mcp = FastMCP("Life OS AI Tools")
+
+async def ensure_db():
+    if get_database() is None:
+        await connect_to_mongo()
+    return get_database()
 
 @mcp.tool()
 async def create_task(title: str, description: Optional[str] = None, priority: str = "medium", due_date: Optional[str] = None) -> str:
@@ -13,7 +18,7 @@ async def create_task(title: str, description: Optional[str] = None, priority: s
     if not title or not title.strip():
         return "Error: Task title is required"
     
-    db = get_database()
+    db = await ensure_db()
     if db is None:
         return "Error: Database not connected"
         
@@ -33,7 +38,7 @@ async def create_task(title: str, description: Optional[str] = None, priority: s
 @mcp.tool()
 async def read_all_tasks() -> str:
     """Get all tasks from the database"""
-    db = get_database()
+    db = await ensure_db()
     if db is None:
         return "Error: Database not connected"
         
@@ -50,7 +55,7 @@ async def update_task(task_id: str, title: Optional[str] = None, description: Op
                 status: Optional[str] = None, priority: Optional[str] = None, 
                 due_date: Optional[str] = None) -> str:
     """Update task details"""
-    db = get_database()
+    db = await ensure_db()
     
     update_dict = {}
     if title is not None: update_dict["title"] = title.strip()
@@ -68,7 +73,7 @@ async def update_task(task_id: str, title: Optional[str] = None, description: Op
 @mcp.tool()
 async def delete_task(task_id: str) -> str:
     """Delete a task"""
-    db = get_database()
+    db = await ensure_db()
     result = await db.tasks.delete_one({"_id": ObjectId(task_id)})
     if result.deleted_count == 0:
         return "Error: Task not found"
@@ -77,7 +82,7 @@ async def delete_task(task_id: str) -> str:
 @mcp.tool()
 async def create_note(title: str, content: str, tags: Optional[List[str]] = None) -> str:
     """Create a new note in the database"""
-    db = get_database()
+    db = await ensure_db()
     note_dict = {
         "title": title.strip(),
         "content": content.strip(),
@@ -91,7 +96,7 @@ async def create_note(title: str, content: str, tags: Optional[List[str]] = None
 @mcp.tool()
 async def read_all_notes() -> str:
     """Get all notes from the database"""
-    db = get_database()
+    db = await ensure_db()
     notes = await db.notes.find().to_list(length=100)
     for note in notes:
         note["_id"] = str(note["_id"])
@@ -102,7 +107,7 @@ async def read_all_notes() -> str:
 @mcp.tool()
 async def update_note(note_id: str, title: Optional[str] = None, content: Optional[str] = None, tags: Optional[List[str]] = None) -> str:
     """Update a note"""
-    db = get_database()
+    db = await ensure_db()
     update_dict = {}
     if title is not None: update_dict["title"] = title.strip()
     if content is not None: update_dict["content"] = content.strip()
@@ -117,7 +122,7 @@ async def update_note(note_id: str, title: Optional[str] = None, content: Option
 @mcp.tool()
 async def delete_note(note_id: str) -> str:
     """Delete a note"""
-    db = get_database()
+    db = await ensure_db()
     result = await db.notes.delete_one({"_id": ObjectId(note_id)})
     if result.deleted_count == 0:
         return "Error: Note not found"

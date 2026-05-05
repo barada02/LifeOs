@@ -114,10 +114,12 @@ async def chat(chat_msg: ChatMessage):
             detail=f"AI service configuration error: {str(e)}"
         )
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         # General error
         raise HTTPException(
             status_code=500,
-            detail=f"Error processing chat message: {str(e)}"
+            detail=f"Error processing chat message: {repr(e)}"
         )
 
 
