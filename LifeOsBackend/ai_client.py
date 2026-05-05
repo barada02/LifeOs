@@ -4,8 +4,9 @@ import json
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from mcp import ClientSession
-from mcp.client.sse import sse_client
+from mcp.client.stdio import stdio_client, StdioServerParameters
 from typing import Optional, Dict
+import sys
 
 load_dotenv()
 
@@ -43,10 +44,15 @@ class AIClient:
         return openai_tools
 
     async def process_message_async(self, user_message: str) -> str:
-        # Start SSE client connection wrapper to the local fastmcp server
+        # Start Stdio client connection wrapper to the local fastmcp server
         # For a true production system, you'd keep the session open.
         # Here we connect, execute, and disconnect.
-        async with sse_client(url="http://localhost:8000/sse") as (read_stream, write_stream):
+        server_path = os.path.join(os.path.dirname(__file__), "mcp_server.py")
+        server_params = StdioServerParameters(
+            command=sys.executable,
+            args=[server_path]
+        )
+        async with stdio_client(server_params) as (read_stream, write_stream):
             async with ClientSession(read_stream, write_stream) as session:
                 await session.initialize()
                 

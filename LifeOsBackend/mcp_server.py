@@ -125,3 +125,7 @@ async def delete_note(note_id: str) -> str:
 
 def get_mcp_server():
     return mcp
+
+if __name__ == "__main__":
+    # When executed, run the FastMCP server over stdio directly
+    mcp.run(transport='stdio')

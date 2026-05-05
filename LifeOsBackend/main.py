@@ -24,10 +24,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Life OS Backend API", version="0.1.0", lifespan=lifespan)
 
-from mcp_server import mcp
-app.mount("/sse", mcp.get_starlette_app())
-app.mount("/messages", mcp.get_starlette_app())  # Important for MCP SSE to work in fastmcp
-
 # Allow React UI to communicate with the backend
 app.add_middleware(
     CORSMiddleware,
