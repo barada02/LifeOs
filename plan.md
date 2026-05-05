@@ -44,10 +44,18 @@ To ensure the project is easy to modify and tech stacks can be swapped later, we
 - [ ] Implement the WebSocket server for real-time frontend updates.
 
 ### Phase 2: AI & MCP Integration
-- [ ] Build the custom MCP Server in Python to expose DB operations (Create/Read/Update/Delete Task/Note) as tools.
-- [ ] Integrate the LLM (Gemini) with an MCP Client.
-- [ ] Build the Chat API endpoint that takes user messages, routes them to the AI, and executes MCP tool calls.
+- [x] Build the custom MCP Server in Python to expose DB operations (Create/Read/Update/Delete Task/Note) as tools.
+  - ✨ Created `mcp_server.py` with 10 tools (5 task + 5 note operations)
+  - Uses `fast-mcp` framework for lightweight MCP server
+- [x] Integrate the LLM (Any OpenAI-compatible provider) with an MCP Client.
+  - ✨ Created `ai_client.py` with configurable provider support
+  - Supports OpenAI, Azure, Local LLMs, any OpenAI-compatible API
+- [x] Build the Chat API endpoint that takes user messages, routes them to the AI, and executes MCP tool calls.
+  - ✨ Added `POST /chat` endpoint to `main.py`
+  - Added `GET /chat/config` for debugging
+  - Added `POST /chat/reset` for conversation management
 - [ ] Ensure that whenever an MCP tool modifies the database, a WebSocket event is fired to update the UI.
+  - 📝 Planned for Phase 3 (WebSocket integration)
 
 ### Phase 3: Frontend (React UI)
 - [ ] Set up the base React app with a premium, dynamic dark-mode design system.
