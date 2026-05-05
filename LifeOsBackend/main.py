@@ -129,8 +129,7 @@ async def get_chat_config():
         config = client.get_config()
         return {
             "status": "configured",
-            "config": config,
-            "available_tools": [tool["function"]["name"] for tool in client.tools]
+            "config": config
         }
     except HTTPException:
         raise
