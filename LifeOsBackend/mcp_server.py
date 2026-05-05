@@ -2,6 +2,7 @@ from fastmcp import FastMCP
 from bson import ObjectId
 from datetime import datetime, timezone
 from typing import Optional, List
+import os
 import json
 from database import get_database, connect_to_mongo
 
@@ -132,5 +133,9 @@ def get_mcp_server():
     return mcp
 
 if __name__ == "__main__":
-    # When executed, run the FastMCP server over stdio directly
-    mcp.run()
+    # When executed, run the FastMCP server over stdio or SSE.
+    transport = os.getenv("MCP_TRANSPORT", "stdio").lower()
+    if transport == "sse":
+        mcp.run(transport="sse")
+    else:
+        mcp.run()

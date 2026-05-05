@@ -1,3 +1,8 @@
+import sys
+import asyncio
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
+
 from fastapi import FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -7,7 +12,7 @@ from database import connect_to_mongo, close_mongo_connection, get_database
 from schemas import TaskCreate, TaskResponse, TaskUpdate, NoteCreate, NoteResponse, NoteUpdate
 from typing import List, Optional
 from pydantic import BaseModel
-from ai_client import create_async_ai_client, create_ai_client
+from ai_client import create_async_ai_client
 import os
 from dotenv import load_dotenv
 
@@ -93,14 +98,10 @@ async def chat(chat_msg: ChatMessage):
         raise HTTPException(status_code=400, detail="Message cannot be empty")
     
     try:
-        if chat_msg.use_async:
-            # Use async AI client
-            client = await get_ai_client()
-            response = await client.process_message_async(chat_msg.message.strip())
-        else:
-            # Use sync AI client (for faster responses in some cases)
-            client = create_ai_client()
-            response = client.process_message(chat_msg.message.strip())
+        # Always use the async client in FastAPI request handlers to avoid
+        # calling asyncio.run inside a running event loop.
+        client = await get_ai_client()
+        response = await client.process_message_async(chat_msg.message.strip())
         
         return ChatResponse(
             response=response,
