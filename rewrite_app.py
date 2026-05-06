@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import os
+
+content = """import React, { useState } from 'react'
 
 function App() {
   const [sidebarWidth, setSidebarWidth] = useState<'w-20' | 'w-64'>('w-20');
@@ -268,4 +270,7 @@ function App() {
   )
 }
 
-export default App
+export default App"""
+
+with open('LifeOsUI/src/App.tsx', 'w', encoding='utf-8') as f:
+    f.write(content)
