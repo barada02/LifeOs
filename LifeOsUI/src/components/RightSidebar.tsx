@@ -1,3 +1,11 @@
+import { useState, useRef, useEffect } from 'react';
+import { api } from '../api';
+
+interface Message {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
 export function RightSidebar({ 
   width, 
   onToggle 
@@ -5,6 +13,47 @@ export function RightSidebar({
   width: 'w-12' | 'w-80', 
   onToggle: () => void 
 }) {
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'assistant', content: 'Hello! I am your Life OS Assistant. How can I help you today?' }
+  ]);
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading, width]);
+
+  const handleSend = async () => {
+    if (!inputValue.trim() || isLoading) return;
+
+    const userMessage = inputValue.trim();
+    setInputValue('');
+    setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
+    setIsLoading(true);
+
+    try {
+      const result = await api.chat.send(userMessage);
+      setMessages(prev => [...prev, { role: 'assistant', content: result.response }]);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error.' }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
   return (
     <aside className={`sidebar-transition flex-shrink-0 ${width} bg-surface-container border-l border-outline-variant flex flex-col h-full z-50 relative`}>
       <button 
@@ -21,51 +70,69 @@ export function RightSidebar({
               <span className="material-symbols-outlined text-primary">smart_toy</span>
               <span className="font-label-sm text-[12px] font-bold uppercase tracking-wider text-on-surface">Life OS Assistant</span>
             </div>
-            <div className="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>
+            {isLoading && <div className="w-2 h-2 rounded-full bg-secondary animate-pulse"></div>}
+            {messages.length > 1 && (
+               <button 
+                 onClick={() => { setMessages([{ role: 'assistant', content: 'Conversation reset.' }]); api.chat.reset().catch(console.error); }}
+                 className="text-outline hover:text-error text-xs ml-auto mr-2"
+               >
+                 Reset
+               </button>
+            )}
           </div>
           <div className="flex-1 overflow-y-auto p-6 space-y-6 no-scrollbar">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-primary-container flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[14px] text-on-primary-container">smart_toy</span>
+            {messages.map((msg, idx) => (
+              <div key={idx} className={`space-y-2 ${msg.role === 'user' ? 'flex flex-col items-end' : ''}`}>
+                <div className={`flex items-center gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center ${msg.role === 'user' ? 'bg-secondary-container' : 'bg-primary-container'}`}>
+                    <span className={`material-symbols-outlined text-[14px] ${msg.role === 'user' ? 'text-on-secondary-container' : 'text-on-primary-container'}`}>
+                      {msg.role === 'user' ? 'person' : 'smart_toy'}
+                    </span>
+                  </div>
+                  <span className="font-label-sm text-[12px] text-outline">
+                    {msg.role === 'user' ? 'You' : 'AI Assistant'}
+                  </span>
                 </div>
-                <span className="font-label-sm text-[12px] text-outline">AI Assistant • Now</span>
-              </div>
-              <div className="bg-surface-container-highest p-4 rounded-xl rounded-tl-none border border-outline-variant/30">
-                <p className="font-body-md text-[14px] leading-relaxed">Good morning Alex. I noticed you have a gap in your schedule at 3 PM. Would you like me to block that for deep work on the Security Audit?</p>
-              </div>
-            </div>
-            <div className="space-y-2 flex flex-col items-end">
-              <div className="flex items-center gap-2 flex-row-reverse">
-                <div className="w-6 h-6 rounded-full bg-secondary-container flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[14px] text-on-secondary-container">person</span>
+                <div className={`${msg.role === 'user' ? 'bg-primary/10 border-primary/20 rounded-tr-none' : 'bg-surface-container-highest border-outline-variant/30 rounded-tl-none'} p-4 rounded-xl border max-w-[90%]`}>
+                  <p className="font-body-md text-[14px] leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                 </div>
-                <span className="font-label-sm text-[12px] text-outline">You • 2m ago</span>
               </div>
-              <div className="bg-primary/10 p-4 rounded-xl rounded-tr-none border border-primary/20 max-w-[90%]">
-                <p className="font-body-md text-[14px] leading-relaxed">Yes, please. And set a reminder 15 minutes before.</p>
+            ))}
+            
+            {isLoading && (
+              <div className="flex items-center gap-2 text-primary">
+                <div className="flex gap-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0s' }}></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                </div>
+                <span className="text-[10px] font-bold uppercase">Processing request...</span>
               </div>
-            </div>
-            <div className="flex items-center gap-2 text-primary">
-              <div className="flex gap-1">
-                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0s' }}></div>
-                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-              </div>
-              <span className="text-[10px] font-bold uppercase">Processing request...</span>
-            </div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
           <div className="p-6 border-t border-outline-variant bg-surface-container-low">
             <div className="relative">
-              <textarea className="w-full bg-surface border border-outline-variant rounded-xl py-3 px-4 pr-12 text-on-surface font-body-md text-[14px] focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all resize-none no-scrollbar" placeholder="Ask AI... (⌘ + Enter)" rows={2} />
-              <button className="absolute right-3 bottom-3 p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors">
+              <textarea 
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                className="w-full bg-surface border border-outline-variant rounded-xl py-3 px-4 pr-12 text-on-surface font-body-md text-[14px] focus:ring-1 focus:ring-primary focus:border-primary outline-none transition-all resize-none no-scrollbar" 
+                placeholder="Ask AI... (Enter to send)" 
+                rows={2} 
+                disabled={isLoading}
+              />
+              <button 
+                onClick={handleSend}
+                disabled={isLoading || !inputValue.trim()}
+                className="absolute right-3 bottom-3 p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors disabled:opacity-50"
+              >
                 <span className="material-symbols-outlined">send</span>
               </button>
             </div>
             <div className="flex items-center gap-2 mt-4 overflow-x-auto no-scrollbar pb-1">
-              <button className="flex-shrink-0 px-3 py-1 rounded-full bg-surface-variant text-[10px] text-on-surface-variant border border-outline-variant hover:border-primary transition-colors">Draft Email</button>
-              <button className="flex-shrink-0 px-3 py-1 rounded-full bg-surface-variant text-[10px] text-on-surface-variant border border-outline-variant hover:border-primary transition-colors">Summarize Notes</button>
-              <button className="flex-shrink-0 px-3 py-1 rounded-full bg-surface-variant text-[10px] text-on-surface-variant border border-outline-variant hover:border-primary transition-colors">Manage Calendar</button>
+              <button onClick={() => setInputValue('Summarize my tasks')} className="flex-shrink-0 px-3 py-1 rounded-full bg-surface-variant text-[10px] text-on-surface-variant border border-outline-variant hover:border-primary transition-colors">Summarize Tasks</button>
+              <button onClick={() => setInputValue('Create a note')} className="flex-shrink-0 px-3 py-1 rounded-full bg-surface-variant text-[10px] text-on-surface-variant border border-outline-variant hover:border-primary transition-colors">Create Note</button>
             </div>
           </div>
         </>
