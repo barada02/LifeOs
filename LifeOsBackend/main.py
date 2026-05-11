@@ -12,19 +12,42 @@ from database import connect_to_mongo, close_mongo_connection, get_database
 from schemas import TaskCreate, TaskResponse, TaskUpdate, NoteCreate, NoteResponse, NoteUpdate
 from typing import List, Optional
 from pydantic import BaseModel
-from ai_client import create_async_ai_client
-import os
 from dotenv import load_dotenv
+from unimcp import UniClient, UniLLM
 
 # Load environment variables
 load_dotenv()
+
+# Global state for MCP/LLM singletons
+app_state = {}
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
     await connect_to_mongo()
+    
+    try:
+        client = UniClient()
+        await client.connect()
+        
+        llm = UniLLM(mcp_client=client)
+        session = llm.create_session(
+            name="FastAPISession", 
+            system_prompt="You are a helpful assistant hooked up to an external database. You MUST use your provided tools."
+        )
+        
+        app_state.update({"client": client, "llm": llm, "session": session})
+        print("Successfully connected to MCP and initialized LLM")
+    except Exception as e:
+        print(f"Warning: Failed to initialize AI features: {e}")
+
     yield
     # Shutdown
+    if "client" in app_state:
+        try:
+            await app_state["client"].disconnect()
+        except:
+            pass
     await close_mongo_connection()
 
 app = FastAPI(title="Life OS Backend API", version="0.1.0", lifespan=lifespan)
@@ -49,31 +72,11 @@ async def root():
 
 class ChatMessage(BaseModel):
     message: str
-    use_async: Optional[bool] = False  # Allow choosing sync or async mode
 
 
 class ChatResponse(BaseModel):
     response: str
     status: str = "success"
-    tool_calls: Optional[List[dict]] = None
-
-
-# Store AI client instance (will be initialized on first use)
-ai_client_instance = None
-
-
-async def get_ai_client():
-    """Get or create AI client instance"""
-    global ai_client_instance
-    if ai_client_instance is None:
-        try:
-            ai_client_instance = create_async_ai_client()
-        except ValueError as e:
-            raise HTTPException(
-                status_code=500,
-                detail=f"AI configuration error: {str(e)}. Set AI_API_KEY environment variable."
-            )
-    return ai_client_instance
 
 
 # ==========================================
@@ -81,76 +84,33 @@ async def get_ai_client():
 # ==========================================
 
 @app.post("/chat", response_model=ChatResponse)
-async def chat(chat_msg: ChatMessage):
+async def chat_endpoint(req: ChatMessage):
     """
     Chat endpoint that processes natural language requests using AI
-    
-    The AI can call MCP tools to manipulate tasks and notes in the database.
-    Tool calls are automatically executed and results are integrated into the response.
-    
-    Example requests:
-    - "Create a task called 'Buy groceries' with high priority"
-    - "What tasks do I have?"
-    - "Mark my first task as done"
-    - "Create a note about the team meeting ideas"
     """
-    if not chat_msg.message or not chat_msg.message.strip():
+    if not req.message or not req.message.strip():
         raise HTTPException(status_code=400, detail="Message cannot be empty")
-    
-    try:
-        # Always use the async client in FastAPI request handlers to avoid
-        # calling asyncio.run inside a running event loop.
-        client = await get_ai_client()
-        response = await client.process_message_async(chat_msg.message.strip())
         
+    llm = app_state.get("llm")
+    session = app_state.get("session")
+    
+    if not llm or not session:
+        raise HTTPException(status_code=500, detail="AI/MCP Not initialized.")
+        
+    try:
+        # Standard LLM tool orchestration loop
+        response = await llm.chat(req.message.strip(), session=session)
         return ChatResponse(
             response=response,
             status="success"
         )
-    
-    except ValueError as e:
-        # Configuration error
-        raise HTTPException(
-            status_code=500,
-            detail=f"AI service configuration error: {str(e)}"
-        )
     except Exception as e:
         import traceback
         traceback.print_exc()
-        # General error
         raise HTTPException(
             status_code=500,
             detail=f"Error processing chat message: {repr(e)}"
         )
-
-
-@app.get("/chat/config")
-async def get_chat_config():
-    """Get current AI/MCP configuration (for debugging)"""
-    try:
-        client = await get_ai_client()
-        config = client.get_config()
-        return {
-            "status": "configured",
-            "config": config
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        return {
-            "status": "not_configured",
-            "error": str(e),
-            "hint": "Set AI_API_KEY environment variable to enable chat functionality"
-        }
-
-
-@app.post("/chat/reset")
-async def reset_chat():
-    """Reset conversation history"""
-    global ai_client_instance
-    if ai_client_instance is not None:
-        ai_client_instance.clear_history()
-    return {"message": "Chat history cleared"}
 
 
 @app.get("/")
