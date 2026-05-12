@@ -3,7 +3,9 @@ import { api } from '../api/client';
 
 export function Dashboard() {
   const [tasks, setTasks] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [notes, setNotes] = useState<any[]>([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(true);
+  const [isLoadingNotes, setIsLoadingNotes] = useState(true);
 
   useEffect(() => {
     async function fetchTasks() {
@@ -13,10 +15,24 @@ export function Dashboard() {
       } catch (error) {
         console.error('Failed to fetch tasks:', error);
       } finally {
-        setIsLoading(false);
+        setIsLoadingTasks(false);
       }
     }
     fetchTasks();
+  }, []);
+
+  useEffect(() => {
+    async function fetchNotes() {
+      try {
+        const data = await api.notes.getAll();
+        setNotes(data);
+      } catch (error) {
+        console.error('Failed to fetch notes:', error);
+      } finally {
+        setIsLoadingNotes(false);
+      }
+    }
+    fetchNotes();
   }, []);
 
   return (
@@ -55,7 +71,7 @@ export function Dashboard() {
               <button className="text-primary font-label-sm text-[12px] font-bold hover:underline">View All Tasks</button>
             </div>
 
-            {isLoading ? (
+            {isLoadingTasks ? (
               <div className="flex items-center justify-center py-10">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
@@ -100,20 +116,30 @@ export function Dashboard() {
                 <h3 className="font-body-lg text-[18px] font-bold text-on-surface">Recent Notes</h3>
                 <span className="material-symbols-outlined text-outline cursor-pointer hover:text-on-surface">add</span>
               </div>
-              <div className="space-y-2">
-                <div className="p-4 hover:bg-surface-container-highest rounded-lg transition-colors cursor-pointer group border border-transparent hover:border-outline-variant">
-                  <p className="font-body-md text-on-surface font-bold mb-1 group-hover:text-primary">2024 Product Vision</p>
-                  <div className="flex gap-1">
-                    <span className="px-1 py-0.5 rounded bg-surface-variant text-on-surface-variant text-[10px]">#STRATEGY</span>
-                  </div>
+              {isLoadingNotes ? (
+                <div className="flex items-center justify-center py-10">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                 </div>
-                <div className="p-4 hover:bg-surface-container-highest rounded-lg transition-colors cursor-pointer group border border-transparent hover:border-outline-variant">
-                  <p className="font-body-md text-on-surface font-bold mb-1 group-hover:text-primary">Tech Stack Refactoring</p>
-                  <div className="flex gap-1">
-                    <span className="px-1 py-0.5 rounded bg-surface-variant text-on-surface-variant text-[10px]">#DEBT</span>
-                  </div>
+              ) : (
+                <div className="space-y-2">
+                  {notes.length > 0 ? (
+                    notes.map((note) => (
+                      <div key={note._id} className="p-4 hover:bg-surface-container-highest rounded-lg transition-colors cursor-pointer group border border-transparent hover:border-outline-variant">
+                        <p className="font-body-md text-on-surface font-bold mb-1 group-hover:text-primary">{note.title}</p>
+                        <div className="flex gap-1">
+                          <span className="px-1 py-0.5 rounded bg-surface-variant text-on-surface-variant text-[10px]">
+                            #{note.category || 'GENERAL'}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-10 text-on-surface-variant italic text-sm">
+                      No notes found.
+                    </div>
+                  )}
                 </div>
-              </div>
+              )}
             </div>
           </aside>
         </div>
