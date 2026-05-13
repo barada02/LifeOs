@@ -20,3 +20,4 @@ python-dotenv
 # Async HTTP (required by fastmcp SSE transport)
 httpx
 anyio
+bson

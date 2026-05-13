@@ -18,9 +18,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application source
 COPY . .
 
-# Cloud Run sets PORT automatically; default to 8080
-ENV PORT=8080
-ENV MCP_TRANSPORT=sse
 
 # Expose the port (informational — Cloud Run uses $PORT)
 EXPOSE 8080
