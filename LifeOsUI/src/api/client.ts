@@ -14,7 +14,7 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
     throw new Error(errorData.detail || 'An error occurred while fetching data');
   }
 
-  return response.json();
+  return response.json() as Promise<T>;
 }
 
 export const api = {
@@ -37,5 +37,6 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ message })
     }),
+    reset: () => apiRequest<any>('/chat/reset', { method: 'POST' }),
   },
 };
