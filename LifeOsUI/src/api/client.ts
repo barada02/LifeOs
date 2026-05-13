@@ -29,7 +29,7 @@ export const api = {
     getAll: () => apiRequest<any[]>('/notes/'),
     getOne: (id: string) => apiRequest<any>(`/notes/${id}`),
     create: (data: any) => apiRequest<any>('/notes/', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: any) => apiRequest<any>('/notes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    update: (id: string, data: any) => apiRequest<any>(`/notes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: string) => apiRequest<any>(`/notes/${id}`, { method: 'DELETE' }),
   },
   chat: {
