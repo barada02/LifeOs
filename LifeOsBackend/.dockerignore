@@ -1,0 +1,31 @@
+# ── Python cache ──────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# ── Virtual environments ──────────────────────────────────
+.venv/
+venv/
+env/
+
+# ── Environment / secrets (never bake into the image) ────
+.env
+*.env
+
+# ── Test artefacts ────────────────────────────────────────
+.pytest_cache/
+Tests/
+test_*.py
+
+# ── Editor / OS noise ────────────────────────────────────
+.idea/
+.vscode/
+*.DS_Store
+Thumbs.db
+
+# ── Build / dist ─────────────────────────────────────────
+dist/
+build/
+*.egg-info/

@@ -1,7 +1,4 @@
-import sys
 import asyncio
-if sys.platform == "win32":
-    asyncio.set_event_loop_policy(asyncio.WindowsProactorEventLoopPolicy())
 
 from fastapi import FastAPI, HTTPException, WebSocket
 from fastapi.middleware.cors import CORSMiddleware
@@ -111,12 +108,6 @@ async def chat_endpoint(req: ChatMessage):
             status_code=500,
             detail=f"Error processing chat message: {repr(e)}"
         )
-
-
-@app.get("/")
-async def root():
-    return {"message": "Life OS Phase 2 API is up and running! (Phase 1 + AI/MCP Integration)"}
-
 
 
 
@@ -244,5 +235,7 @@ async def delete_note(note_id: str):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    import os
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
 
