@@ -1,0 +1,22 @@
+# Life OS MCP Server — Dependencies
+
+# MCP server framework
+fastmcp
+
+# MongoDB async driver
+motor
+pymongo
+dnspython
+
+# Data validation
+pydantic
+
+# Environment variables
+python-dotenv
+
+# BSON (ObjectId handling — bundled with pymongo, listed explicitly for clarity)
+# pymongo already includes bson
+
+# Async HTTP (required by fastmcp SSE transport)
+httpx
+anyio
