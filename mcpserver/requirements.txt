@@ -13,10 +13,9 @@ pydantic
 # Environment variables
 python-dotenv
 
-# BSON (ObjectId handling — bundled with pymongo, listed explicitly for clarity)
-# pymongo already includes bson
+# NOTE: Do NOT add `bson` here. pymongo bundles its own bson module.
+# Installing the standalone `bson` PyPI package will shadow it and cause ImportError.
 
 # Async HTTP (required by fastmcp SSE transport)
 httpx
 anyio
-bson
