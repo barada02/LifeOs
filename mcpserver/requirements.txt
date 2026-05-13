@@ -1,7 +1,6 @@
 # Life OS MCP Server — Dependencies
+mcp
 
-# MCP server framework
-fastmcp
 
 # MongoDB async driver
 motor

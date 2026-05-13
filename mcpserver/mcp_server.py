@@ -10,7 +10,7 @@ Transport:
                      (listens on PORT env var, default 8080)
 """
 
-from fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP
 from bson import ObjectId
 from datetime import datetime, timezone
 from typing import Optional, List
@@ -18,11 +18,11 @@ import os
 import json
 
 from database import get_database, connect_to_mongo
-
+port = int(os.environ.get("PORT", 8080))
 # ---------------------------------------------------------------------------
 # FastMCP instance
 # ---------------------------------------------------------------------------
-mcp = FastMCP("Life OS MCP Server",host="0.0.0.0",port=8080)
+mcp = FastMCP("Life OS MCP Server",host="0.0.0.0",port=port)
 
 
 # ---------------------------------------------------------------------------
