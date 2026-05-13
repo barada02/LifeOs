@@ -225,11 +225,6 @@ async def delete_note(note_id: str) -> str:
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
-    transport = os.getenv("MCP_TRANSPORT", "stdio").lower()
-
-    if transport == "sse":
-        # SSE mode — used on Cloud Run
-        mcp.run(transport="sse")
-    else:
-        # stdio mode — used locally / with Claude Desktop
-        mcp.run()
+    
+    mcp.run(transport="sse")
+   
