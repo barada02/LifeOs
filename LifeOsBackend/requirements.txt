@@ -1,57 +1,35 @@
-# Life OS Backend - Phase 1 & 2 Requirements
-# Core dependencies + Phase 2 (MCP Server & AI Layer)
+# Life OS Backend — Requirements
+# Phase 1 (core CRUD) + Auth (JWT + bcrypt)
 
-# Core Annotations & Types
-annotated-doc
-annotated-types
-typing-inspection
-typing_extensions
-
-# Async I/O
-anyio
-h11
-idna
-
-# Core Framework
+# ── Core Framework ────────────────────────────────────────────────────────────
 fastapi
-uvicorn
+uvicorn[standard]
 starlette
-python-multipart
+python-multipart          # Required for OAuth2PasswordRequestForm
 
-# Database
+# ── Database ──────────────────────────────────────────────────────────────────
 motor
 pymongo
 dnspython
 
-# Data Validation
-pydantic
+# ── Data Validation ───────────────────────────────────────────────────────────
+pydantic[email]           # [email] pulls in email-validator for EmailStr
 pydantic_core
+annotated-types
+typing_extensions
 
-# Environment Configuration
+# ── Auth ──────────────────────────────────────────────────────────────────────
+python-jose[cryptography] # JWT encode / decode
+passlib[bcrypt]           # Password hashing
+
+# ── Environment ───────────────────────────────────────────────────────────────
 python-dotenv
 
-# CLI & Color Support
-click
-colorama
-
-# Phase 2: AI & MCP Integration
-# MCP Server Framework
-fastmcp
-
-# LLM Client (works with any OpenAI-compatible provider)
-openai
-
-# Async HTTP Support
+# ── Async HTTP (used by motor internally, handy for tests) ────────────────────
 httpx
+anyio
 
-# Development & Testing
+# ── Development & Testing ─────────────────────────────────────────────────────
 pytest
 pytest-asyncio
-
-# Code Quality (optional)
-black
-pylint
-mypy
-
 requests
-unimcp
