@@ -1,35 +1,13 @@
-﻿@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200');
 
-body {
-  background-color: #13131b;
-  color: #e4e1ed;
-  font-family: 'Inter', sans-serif;
-  margin: 0;
-  padding: 0;
-}
+@import './styles/base.css';
+@import './styles/app.css';
+@import './styles/components.css';
+@import './styles/dashboard.css';
+@import './styles/pages.css';
 
-.material-symbols-outlined { 
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; 
-}
-
-.glass-card { 
-  background: rgba(31, 31, 39, 0.7); 
-  backdrop-filter: blur(12px); 
-}
-
-.no-scrollbar::-webkit-scrollbar { 
-  display: none; 
-}
-.no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-
-/* Layout Transitions */
-.sidebar-transition { 
-  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease; 
-}
-
-.main-content-transition { 
-  transition: margin 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  font-size: 20px;
 }

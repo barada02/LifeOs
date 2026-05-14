@@ -1,0 +1,62 @@
+/* ===== LIFE OS — BASE STYLES ===== */
+
+:root {
+  --bg:       #0d0d14;
+  --bg-s:     #13131f;
+  --bg-e:     #1a1a28;
+  --bg-h:     #20202e;
+  --border:   rgba(255,255,255,0.07);
+  --border-s: rgba(255,255,255,0.13);
+  --accent:   #7c6af7;
+  --accent-h: #9d8ff9;
+  --accent-d: rgba(124,106,247,0.12);
+  --text-1:   #f0eeff;
+  --text-2:   #a8a3c5;
+  --text-3:   #6b6688;
+  --green:    #4ede9e;
+  --green-d:  rgba(78,222,158,0.12);
+  --yellow:   #fbbf24;
+  --yellow-d: rgba(251,191,36,0.12);
+  --red:      #f06060;
+  --red-d:    rgba(240,96,96,0.12);
+  --blue:     #60a5fa;
+  --blue-d:   rgba(96,165,250,0.12);
+  --r-sm:     6px;
+  --r-md:     10px;
+  --r-lg:     16px;
+  --r-xl:     22px;
+  --t:        0.18s ease;
+  --glow:     0 0 20px rgba(124,106,247,0.35);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root {
+  height: 100%;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text-1);
+  -webkit-font-smoothing: antialiased;
+}
+
+button { cursor: pointer; font: inherit; }
+input, textarea, select {
+  font: inherit;
+  background: var(--bg-e);
+  border: 1px solid var(--border-s);
+  color: var(--text-1);
+  border-radius: var(--r-md);
+  padding: 8px 12px;
+  width: 100%;
+  outline: none;
+  transition: border-color var(--t);
+}
+input:focus, textarea:focus, select:focus { border-color: var(--accent); }
+textarea { resize: vertical; }
+label { display: flex; flex-direction: column; gap: 5px; font-size: 13px; color: var(--text-2); }
+
+.label-hint { font-size: 11px; color: var(--text-3); }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-s); border-radius: 99px; }
