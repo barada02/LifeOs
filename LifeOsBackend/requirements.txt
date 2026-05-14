@@ -1,5 +1,5 @@
 # Life OS Backend — Requirements
-# Phase 1 (core CRUD) + Auth (JWT + bcrypt)
+# Phase 1 (core CRUD) + Auth (JWT + bcrypt) + AI (UniMCP)
 
 # ── Core Framework ────────────────────────────────────────────────────────────
 fastapi
@@ -33,3 +33,6 @@ anyio
 pytest
 pytest-asyncio
 requests
+
+# ── AI (UniMCP) ───────────────────────────────────────────────────────────────
+unimcp                    # UniClient + UniLLM — wraps raw MCP client cleanly

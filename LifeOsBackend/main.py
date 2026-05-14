@@ -1,15 +1,18 @@
 """
-main.py — Life OS Backend API (Phase 1 + Auth)
+main.py — Life OS Backend API (Phase 1 + Auth + AI)
 
 Features
 --------
-• POST /auth/signup   — create an account
-• POST /auth/login    — get a JWT
-• GET  /auth/me       — current user info  (protected)
+• POST /auth/signup        — create an account
+• POST /auth/login         — get a JWT
+• GET  /auth/me            — current user info  (protected)
 
 • Full CRUD on /tasks/ and /notes/ — all protected, scoped per user
 
-MCP/AI integration lives in the separate `mcpserver/` service.
+• POST /ai/chat            — send a message to the AI agent  (protected)
+• POST /ai/clear-session   — wipe a user's conversation history (protected)
+
+AI integration powered by UniMCP (UniClient + UniLLM).
 """
 
 import os
@@ -42,6 +45,7 @@ from schemas import (
     UserResponse,
     UserSignup,
 )
+from ai_client import LifeOSAIClient, clear_session
 
 load_dotenv()
 
@@ -284,6 +288,42 @@ async def delete_note(note_id: str, current_user: dict = Depends(get_current_use
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Note not found")
     return {"message": "Note deleted successfully"}
+
+
+# ── AI Chat Routes ────────────────────────────────────────────────────────────
+
+class ChatRequest(BaseModel):
+    message: str
+
+class ChatResponse(BaseModel):
+    reply: str
+
+
+@app.post("/ai/chat", response_model=ChatResponse, tags=["AI"])
+async def ai_chat(payload: ChatRequest, current_user: dict = Depends(get_current_user)):
+    """
+    Send a message to the LifeOS AI agent.
+
+    The agent has access to MCP tools (tasks, notes, etc.) and maintains
+    per-user conversation history in memory across requests.
+    """
+    user_id = current_user["user_id"]
+    try:
+        async with LifeOSAIClient() as client:
+            reply = await client.chat(user_id, payload.message)
+        return ChatResponse(reply=reply)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=f"AI service error: {e}",
+        )
+
+
+@app.post("/ai/clear-session", tags=["AI"])
+async def ai_clear_session(current_user: dict = Depends(get_current_user)):
+    """Clear the AI conversation history for the current user."""
+    clear_session(current_user["user_id"])
+    return {"message": "Conversation history cleared."}
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
